@@ -10,6 +10,9 @@ public class GameManager : MonoBehaviour
     [Header("환자 데이터 (순서대로)")]
     public PatientData[] patients;
 
+    [Header("인트로 / 에필로그 데이터")]
+    public EpilogueDatabase epilogueDatabase;
+
     [Header("매니저 참조")]
     public VNManager vnManager;
     public PuzzleManager puzzleManager;
@@ -38,8 +41,10 @@ public class GameManager : MonoBehaviour
     {
         yield return FadeIn();
 
-        // 인트로 (선택적으로 VN 라인 추가 가능)
-        // yield return vnManager.PlayLines(introLines);
+        // 게임 인트로
+        yield return ChangeState(GameState.VN);
+        if (epilogueDatabase != null && epilogueDatabase.introLines.Length > 0)
+            yield return vnManager.PlayLines(epilogueDatabase.introLines);
 
         for (patientIndex = 0; patientIndex < patients.Length; patientIndex++)
         {
@@ -68,13 +73,37 @@ public class GameManager : MonoBehaviour
             yield return vnManager.PlayLines(patient.outroLines);
         }
 
-        // 엔딩
+        // 에필로그
+        yield return FadeOut();
+        yield return ChangeState(GameState.VN);
+        yield return FadeIn();
+
+        if (epilogueDatabase != null)
+        {
+            // 환자별 에필로그 순서대로 재생
+            foreach (var patient in patients)
+            {
+                string endingId = endingTracker.GetPatientEnding(patient.patientType);
+                var lines = epilogueDatabase.GetLines(endingId);
+                if (lines != null && lines.Length > 0)
+                {
+                    yield return vnManager.PlayLines(lines);
+                    yield return FadeOut();
+                    yield return FadeIn();
+                }
+            }
+
+            // 주인공 에필로그
+            string protagonistEndingId = endingTracker.GetMainCharacterEnding();
+            var protagonistLines = epilogueDatabase.GetLines(protagonistEndingId);
+            if (protagonistLines != null && protagonistLines.Length > 0)
+                yield return vnManager.PlayLines(protagonistLines);
+        }
+
+        // 엔딩 갤러리
         yield return FadeOut();
         yield return ChangeState(GameState.Ending);
         yield return FadeIn();
-
-        // TODO: 엔딩 씬 연출
-        Debug.Log("Main ending: " + endingTracker.GetMainCharacterEnding());
     }
 
     IEnumerator ChangeState(GameState state)
