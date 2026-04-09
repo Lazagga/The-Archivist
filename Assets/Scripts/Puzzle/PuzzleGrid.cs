@@ -92,6 +92,7 @@ public class PuzzleGrid : MonoBehaviour
 
     public bool AllProcessed()
     {
+        if (allPieces.Count == 0) return false;
         foreach (var p in allPieces)
             if (!p.IsProcessed) return false;
         return true;

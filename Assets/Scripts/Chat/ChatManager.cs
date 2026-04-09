@@ -17,7 +17,6 @@ public class ChatManager : MonoBehaviour
     [Header("프리팹")]
     public GameObject chatBubblePrefab;
     public GameObject choiceButtonPrefab;
-    public GameObject processPanelPrefab; // 처리 선택 패널
 
     [Header("처리 선택 패널 참조")]
     public GameObject processPanel;
@@ -53,6 +52,13 @@ public class ChatManager : MonoBehaviour
     public void Init(PatientData patient)
     {
         currentPatient = patient;
+        currentPiece = null;
+        currentNode = null;
+        if (patientLineCoroutine != null)
+        {
+            StopCoroutine(patientLineCoroutine);
+            patientLineCoroutine = null;
+        }
         pieceHistories.Clear();
         pieceCurrentNodes.Clear();
         ClearChat();

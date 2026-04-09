@@ -13,6 +13,9 @@ public class VNManager : MonoBehaviour
     public GameObject dialogueBox;
     public Button nextButton;
 
+    [Header("기본 배경")]
+    public Sprite defaultBackground; // 환자 전환 시 초기화용 (null이면 유지)
+
     [Header("타이핑 속도")]
     public float typingSpeed = 0.03f;
 
@@ -37,6 +40,11 @@ public class VNManager : MonoBehaviour
 
         gameObject.SetActive(true);
 
+        // 배경 초기화 (defaultBackground가 지정된 경우)
+        if (defaultBackground != null)
+            backgroundImage.sprite = defaultBackground;
+        characterImage.gameObject.SetActive(false);
+
         foreach (var line in lines)
         {
             // 배경 교체
@@ -58,9 +66,12 @@ public class VNManager : MonoBehaviour
 
             yield return TypeLine(line.line);
 
-            // 다음 클릭 대기
-            waitingForNext = false;
-            yield return new WaitUntil(() => waitingForNext);
+            // 타이핑 중 스킵 클릭은 다음 줄로 넘기는 역할도 겸함
+            if (!skipTyping)
+            {
+                waitingForNext = false;
+                yield return new WaitUntil(() => waitingForNext);
+            }
         }
     }
 

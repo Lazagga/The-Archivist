@@ -157,14 +157,23 @@ public class EndingTracker : MonoBehaviour
             return "elder_arbitrary";
 
         // pieceId 규칙: "elder_daughter_*", "elder_wife_*", "elder_career_*"
-        bool keptDaughter = keptPieces.Exists(id => id.Contains("daughter"));
-        bool keptWife     = keptPieces.Exists(id => id.Contains("wife"));
-        bool keptCareer   = keptPieces.Exists(id => id.Contains("career"));
+        int daughterCount = keptPieces.FindAll(id => id.Contains("daughter")).Count;
+        int wifeCount     = keptPieces.FindAll(id => id.Contains("wife")).Count;
+        int careerCount   = keptPieces.FindAll(id => id.Contains("career")).Count;
 
-        if (keptDaughter) return "elder_kept_daughter";
-        if (keptWife)     return "elder_kept_wife";
-        if (keptCareer)   return "elder_kept_career";
-        return "elder_kept_misc";
+        int maxCount = Mathf.Max(daughterCount, wifeCount, careerCount);
+
+        // 최다 카테고리가 2개 이상이면 misc (동률)
+        int topCount = 0;
+        if (daughterCount == maxCount) topCount++;
+        if (wifeCount     == maxCount) topCount++;
+        if (careerCount   == maxCount) topCount++;
+
+        if (topCount > 1) return "elder_kept_misc";
+
+        if (daughterCount == maxCount) return "elder_kept_daughter";
+        if (wifeCount     == maxCount) return "elder_kept_wife";
+        return "elder_kept_career";
     }
 
     // ── 아이 엔딩 ──────────────────────────────

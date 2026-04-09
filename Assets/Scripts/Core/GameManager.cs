@@ -41,6 +41,10 @@ public class GameManager : MonoBehaviour
 
     IEnumerator RunGame()
     {
+        // 씬 시작 시 페이드 캔버스를 불투명하게 초기화 (FadeIn 시작점 보장)
+        fadeCanvas.alpha = 1f;
+        fadeCanvas.gameObject.SetActive(true);
+
         // 타이틀: 엔딩을 한 번이라도 봤으면 저녁, 아니면 아침
         bool isEvening = PlayerPrefs.GetInt("HasCompletedGame", 0) == 1;
         yield return ChangeState(GameState.Title);

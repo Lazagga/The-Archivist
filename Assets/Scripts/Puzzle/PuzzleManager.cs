@@ -16,7 +16,6 @@ public class PuzzleManager : MonoBehaviour
     public CanvasGroup completedImageGroup;
 
     MemoryPiece selectedPiece;
-    PatientData currentPatient;
 
     public bool IsComplete { get; private set; }
     public PuzzleGrid Grid => grid;
@@ -38,7 +37,6 @@ public class PuzzleManager : MonoBehaviour
     public void LoadPatient(PatientData patient)
     {
         IsComplete = false;
-        currentPatient = patient;
 
         // 알츠하이머 전용: 프레임 제한 설정
         grid.maxPieces = patient.maxPiecesInFrame;
