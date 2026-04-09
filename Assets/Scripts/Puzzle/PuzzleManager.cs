@@ -60,7 +60,8 @@ public class PuzzleManager : MonoBehaviour
             selectedPiece.SetSelected(false);
 
         selectedPiece = piece;
-        piece.SetSelected(true);
+        if (!piece.IsProcessed)
+            piece.SetSelected(true);
 
         chatManager.OnPieceSelected(piece);
     }

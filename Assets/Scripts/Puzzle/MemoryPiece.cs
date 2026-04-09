@@ -70,8 +70,7 @@ public class MemoryPiece : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (!IsProcessed)
-            PuzzleManager.Instance.OnPieceClicked(this);
+        PuzzleManager.Instance.OnPieceClicked(this);
     }
 
     public void SetSelected(bool selected)
@@ -113,9 +112,14 @@ public class MemoryPiece : MonoBehaviour, IPointerClickHandler
             // 노인: 제거 → 투명하게
             rawImage.color = new Color(1f, 1f, 1f, 0.15f);
         }
+        else if (data.pieceId.StartsWith("child"))
+        {
+            // 아동: 그대로 둔다 → 원본 유지
+            rawImage.color = Color.white;
+        }
         else
         {
-            // 군인: 끌어안음 → 원본 유지, 약간 어둡게
+            // 군인: 끌어안음 → 약간 어둡게
             rawImage.color = new Color(0.7f, 0.7f, 0.8f, 1f);
         }
 

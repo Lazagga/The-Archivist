@@ -41,6 +41,9 @@ public class ChatManager : MonoBehaviour
     DialogueNodeData currentNode;
     PatientData currentPatient;
 
+    // ShowPatientLine 코루틴 핸들 (중복 실행 방지용)
+    Coroutine patientLineCoroutine;
+
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -80,7 +83,8 @@ public class ChatManager : MonoBehaviour
 
             currentNode = piece.data.rootNode;
             pieceCurrentNodes[id] = currentNode;
-            StartCoroutine(ShowPatientLine(currentNode.patientLine, id));
+            if (patientLineCoroutine != null) StopCoroutine(patientLineCoroutine);
+            patientLineCoroutine = StartCoroutine(ShowPatientLine(currentNode.patientLine, id, currentNode, currentPiece));
         }
         else
         {
@@ -100,7 +104,7 @@ public class ChatManager : MonoBehaviour
     }
 
     // ── 환자 대사 표시 ─────────────────────────
-    IEnumerator ShowPatientLine(string line, string pieceId)
+    IEnumerator ShowPatientLine(string line, string pieceId, DialogueNodeData node, MemoryPiece piece)
     {
         ClearChoices();
         yield return new WaitForSeconds(0.3f);
@@ -110,8 +114,10 @@ public class ChatManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
 
-        if (currentNode != null && !currentPiece.IsProcessed)
-            ShowChoices(currentNode, pieceId);
+        if (node != null && !piece.IsProcessed)
+            ShowChoices(node, pieceId);
+
+        patientLineCoroutine = null;
     }
 
     // ── 선택지 표시 ────────────────────────────
@@ -154,7 +160,8 @@ public class ChatManager : MonoBehaviour
         {
             currentNode = choice.nextNode;
             pieceCurrentNodes[pieceId] = currentNode;
-            StartCoroutine(ShowPatientLine(currentNode.patientLine, pieceId));
+            if (patientLineCoroutine != null) StopCoroutine(patientLineCoroutine);
+            patientLineCoroutine = StartCoroutine(ShowPatientLine(currentNode.patientLine, pieceId, currentNode, currentPiece));
         }
         else
         {

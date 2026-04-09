@@ -142,7 +142,6 @@ public class EndingTracker : MonoBehaviour
     string CalcElderEnding(PatientRecord r)
     {
         bool discoveredValue = r.GetTagCount(DialogueTag.PatientValue) > 0;
-        int keptCount        = r.GetProcessCount(PieceProcessState.OptionA);
 
         if (!discoveredValue)
             return "elder_arbitrary"; // 대화 없이 임의로 남김
@@ -152,6 +151,10 @@ public class EndingTracker : MonoBehaviour
         foreach (var p in r.pieceRecords)
             if (p.processState == PieceProcessState.OptionA)
                 keptPieces.Add(p.pieceId);
+
+        // 가치를 파악했지만 전부 제거한 경우
+        if (keptPieces.Count == 0)
+            return "elder_arbitrary";
 
         // pieceId 규칙: "elder_daughter_*", "elder_wife_*", "elder_career_*"
         bool keptDaughter = keptPieces.Exists(id => id.Contains("daughter"));
@@ -168,7 +171,6 @@ public class EndingTracker : MonoBehaviour
     string CalcChildEnding(PatientRecord r)
     {
         int revealCount      = r.GetProcessCount(PieceProcessState.OptionA); // 드러낸다
-        int keepCount        = r.GetProcessCount(PieceProcessState.OptionB); // 그대로 둔다
         int totalDialogue    = r.GetTotalDialogueCount();
         bool hasEmotionTag   = r.GetTagCount(DialogueTag.KeyEmotion) > 0;
 
@@ -186,16 +188,33 @@ public class EndingTracker : MonoBehaviour
     }
 
     // ── 주인공 엔딩 계산 ───────────────────────
+    // embraceTotal: 기억을 붙들거나 보존한 횟수 (군인 OptionB, 노인 OptionA, 아동 OptionB)
+    // releaseTotal: 기억을 덜어내거나 드러낸 횟수 (군인 OptionA, 노인 OptionB, 아동 OptionA)
     public string GetMainCharacterEnding()
     {
         int embraceTotal = 0;
         int releaseTotal = 0;
-        int revealTotal  = 0;
 
         foreach (var record in records.Values)
         {
-            embraceTotal += record.GetProcessCount(PieceProcessState.OptionB);
-            releaseTotal += record.GetProcessCount(PieceProcessState.OptionA);
+            switch (record.patientType)
+            {
+                case PatientType.Soldier:
+                    // OptionA=덜어낸다(release), OptionB=끌어안는다(embrace)
+                    releaseTotal += record.GetProcessCount(PieceProcessState.OptionA);
+                    embraceTotal += record.GetProcessCount(PieceProcessState.OptionB);
+                    break;
+                case PatientType.Elder:
+                    // OptionA=남긴다(preserve=embrace), OptionB=제거한다(release)
+                    embraceTotal += record.GetProcessCount(PieceProcessState.OptionA);
+                    releaseTotal += record.GetProcessCount(PieceProcessState.OptionB);
+                    break;
+                case PatientType.Child:
+                    // OptionA=드러낸다(release), OptionB=그대로 둔다(leave=embrace)
+                    releaseTotal += record.GetProcessCount(PieceProcessState.OptionA);
+                    embraceTotal += record.GetProcessCount(PieceProcessState.OptionB);
+                    break;
+            }
         }
 
         if (embraceTotal > releaseTotal + 2)
