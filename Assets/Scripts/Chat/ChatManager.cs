@@ -69,11 +69,14 @@ public class ChatManager : MonoBehaviour
 
         string id = piece.data.pieceId;
 
+        // 미처리 조각이면 항상 EndingTracker에 활성 조각 알림 (첫 선택/재선택 공통)
+        if (!piece.IsProcessed)
+            EndingTracker.Instance.BeginPiece(id);
+
         if (!pieceHistories.ContainsKey(id))
         {
             // 첫 선택: 새 대화 시작
             pieceHistories[id] = new List<GameObject>();
-            EndingTracker.Instance.BeginPiece(id);
 
             currentNode = piece.data.rootNode;
             pieceCurrentNodes[id] = currentNode;

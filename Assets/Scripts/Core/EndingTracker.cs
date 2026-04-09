@@ -52,8 +52,11 @@ public class EndingTracker : MonoBehaviour
 
     // 현재 진행 중인 환자 기록
     PatientRecord currentRecord;
-    // 현재 진행 중인 조각 기록
-    PieceRecord currentPiece;
+
+    // 조각별 진행 중인 기록 (pieceId → PieceRecord)
+    readonly Dictionary<string, PieceRecord> activePieces
+        = new Dictionary<string, PieceRecord>();
+    string currentPieceId;
 
     void Awake()
     {
@@ -66,40 +69,37 @@ public class EndingTracker : MonoBehaviour
     {
         currentRecord = new PatientRecord { patientType = type };
         records[type] = currentRecord;
+        activePieces.Clear();
+        currentPieceId = null;
     }
 
-    // ── 조각 선택 시작 ─────────────────────────
+    // ── 조각 선택 시작 (첫 선택 및 재선택 모두 호출) ──
     public void BeginPiece(string pieceId)
     {
-        currentPiece = new PieceRecord { pieceId = pieceId };
+        // 없으면 새로 생성, 있으면 기존 데이터 유지
+        if (!activePieces.ContainsKey(pieceId))
+            activePieces[pieceId] = new PieceRecord { pieceId = pieceId };
+        currentPieceId = pieceId;
     }
 
     // ── 대화 선택지 선택 시 태그 기록 ──────────
     public void RecordTags(DialogueTag[] tags)
     {
-        if (currentPiece == null) return;
-        currentPiece.dialogueCount++;
+        if (currentPieceId == null || !activePieces.TryGetValue(currentPieceId, out var piece)) return;
+        piece.dialogueCount++;
         foreach (var tag in tags)
             if (tag != DialogueTag.None)
-                currentPiece.usedTags.Add(tag);
+                piece.usedTags.Add(tag);
     }
 
     // ── 처리 결정 ──────────────────────────────
     public void RecordProcess(PieceProcessState state)
     {
-        if (currentPiece == null) return;
-        currentPiece.processState = state;
-        currentRecord?.pieceRecords.Add(currentPiece);
-        currentPiece = null;
-    }
-
-    // 조각 대화를 끝내지 않고 다른 조각으로 이동 시 현재 조각 저장
-    public void PausePiece()
-    {
-        if (currentPiece != null && currentRecord != null)
-        {
-            // 아직 미처리된 조각은 기록에 보류 (pieceId로 나중에 업데이트)
-        }
+        if (currentPieceId == null || !activePieces.TryGetValue(currentPieceId, out var piece)) return;
+        piece.processState = state;
+        currentRecord?.pieceRecords.Add(piece);
+        activePieces.Remove(currentPieceId);
+        currentPieceId = null;
     }
 
     // ── 엔딩 계산 ──────────────────────────────
