@@ -1,7 +1,8 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public enum GameState { VN, Puzzle, Ending }
+public enum GameState { Title, VN, Puzzle, Ending }
 
 public class GameManager : MonoBehaviour
 {
@@ -17,6 +18,7 @@ public class GameManager : MonoBehaviour
     public VNManager vnManager;
     public PuzzleManager puzzleManager;
     public EndingTracker endingTracker;
+    public TitleManager titleManager;
 
     [Header("씬 전환 캔버스")]
     public CanvasGroup fadeCanvas;
@@ -39,7 +41,13 @@ public class GameManager : MonoBehaviour
 
     IEnumerator RunGame()
     {
+        // 타이틀 (아침)
+        yield return ChangeState(GameState.Title);
+        titleManager.Show(false);
         yield return FadeIn();
+        yield return titleManager.WaitForStart();
+        titleManager.Hide();
+        yield return FadeOut();
 
         // 게임 인트로
         yield return ChangeState(GameState.VN);
@@ -100,10 +108,16 @@ public class GameManager : MonoBehaviour
                 yield return vnManager.PlayLines(protagonistLines);
         }
 
-        // 엔딩 갤러리
+        // 타이틀 복귀 (저녁)
         yield return FadeOut();
         yield return ChangeState(GameState.Ending);
+        titleManager.Show(true);
         yield return FadeIn();
+        yield return titleManager.WaitForStart();
+
+        // 씬 리로드 → 모든 상태 초기화 후 아침 타이틀로
+        yield return FadeOut();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     IEnumerator ChangeState(GameState state)
@@ -111,6 +125,7 @@ public class GameManager : MonoBehaviour
         CurrentState = state;
         vnManager.SetActive(state == GameState.VN);
         puzzleManager.SetActive(state == GameState.Puzzle);
+        // Title/Ending은 titleManager.Show/Hide로 직접 제어
         yield return null;
     }
 
