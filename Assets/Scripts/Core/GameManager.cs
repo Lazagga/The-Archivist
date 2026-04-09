@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public enum GameState { Title, VN, Puzzle, Ending }
+public enum GameState { Title, VN, Puzzle }
 
 public class GameManager : MonoBehaviour
 {
@@ -41,9 +41,10 @@ public class GameManager : MonoBehaviour
 
     IEnumerator RunGame()
     {
-        // 타이틀 (아침)
+        // 타이틀: 엔딩을 한 번이라도 봤으면 저녁, 아니면 아침
+        bool isEvening = PlayerPrefs.GetInt("HasCompletedGame", 0) == 1;
         yield return ChangeState(GameState.Title);
-        titleManager.Show(false);
+        titleManager.Show(isEvening);
         yield return FadeIn();
         yield return titleManager.WaitForStart();
         titleManager.Hide();
@@ -108,14 +109,9 @@ public class GameManager : MonoBehaviour
                 yield return vnManager.PlayLines(protagonistLines);
         }
 
-        // 타이틀 복귀 (저녁)
-        yield return FadeOut();
-        yield return ChangeState(GameState.Ending);
-        titleManager.Show(true);
-        yield return FadeIn();
-        yield return titleManager.WaitForStart();
-
-        // 씬 리로드 → 모든 상태 초기화 후 아침 타이틀로
+        // 엔딩 완료 플래그 저장 후 씬 리로드 → 저녁 타이틀로 복귀
+        PlayerPrefs.SetInt("HasCompletedGame", 1);
+        PlayerPrefs.Save();
         yield return FadeOut();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
@@ -125,7 +121,7 @@ public class GameManager : MonoBehaviour
         CurrentState = state;
         vnManager.SetActive(state == GameState.VN);
         puzzleManager.SetActive(state == GameState.Puzzle);
-        // Title/Ending은 titleManager.Show/Hide로 직접 제어
+        // Title은 titleManager.Show/Hide로 직접 제어
         yield return null;
     }
 
