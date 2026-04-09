@@ -82,7 +82,6 @@ public class PuzzleManager : MonoBehaviour
 
         piece.SetSelected(false);
         selectedPiece = null;
-        CheckCompletion();
     }
 
     // ── 완료 체크 ──────────────────────────────

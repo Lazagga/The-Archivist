@@ -18,6 +18,7 @@ public class VNManager : MonoBehaviour
 
     bool waitingForNext = false;
     bool skipTyping = false;
+    bool isTyping = false;
 
     void Awake()
     {
@@ -67,22 +68,25 @@ public class VNManager : MonoBehaviour
     {
         dialogueText.text = "";
         skipTyping = false;
+        isTyping = true;
 
         foreach (char c in text)
         {
             if (skipTyping)
             {
                 dialogueText.text = text;
-                yield break;
+                break;
             }
             dialogueText.text += c;
             yield return new WaitForSeconds(typingSpeed);
         }
+
+        isTyping = false;
     }
 
     void OnNextClicked()
     {
-        if (!skipTyping && dialogueText.text.Length < dialogueText.text.Length)
+        if (isTyping)
         {
             // 타이핑 중이면 스킵
             skipTyping = true;

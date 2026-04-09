@@ -32,6 +32,10 @@ public class ChatManager : MonoBehaviour
     readonly Dictionary<string, List<GameObject>> pieceHistories
         = new Dictionary<string, List<GameObject>>();
 
+    // 조각별 현재 노드 저장 (pieceId → 마지막 활성 노드)
+    readonly Dictionary<string, DialogueNodeData> pieceCurrentNodes
+        = new Dictionary<string, DialogueNodeData>();
+
     // 현재 선택된 조각
     MemoryPiece currentPiece;
     DialogueNodeData currentNode;
@@ -47,6 +51,7 @@ public class ChatManager : MonoBehaviour
     {
         currentPatient = patient;
         pieceHistories.Clear();
+        pieceCurrentNodes.Clear();
         ClearChat();
         ShowEmpty(true);
         processPanel.SetActive(false);
@@ -71,6 +76,7 @@ public class ChatManager : MonoBehaviour
             EndingTracker.Instance.BeginPiece(id);
 
             currentNode = piece.data.rootNode;
+            pieceCurrentNodes[id] = currentNode;
             StartCoroutine(ShowPatientLine(currentNode.patientLine, id));
         }
         else
@@ -83,7 +89,10 @@ public class ChatManager : MonoBehaviour
             if (piece.IsProcessed)
                 ClearChoices();
             else
+            {
+                pieceCurrentNodes.TryGetValue(id, out currentNode);
                 ShowChoices(currentNode, id);
+            }
         }
     }
 
@@ -141,6 +150,7 @@ public class ChatManager : MonoBehaviour
         if (choice.nextNode != null)
         {
             currentNode = choice.nextNode;
+            pieceCurrentNodes[pieceId] = currentNode;
             StartCoroutine(ShowPatientLine(currentNode.patientLine, pieceId));
         }
         else
