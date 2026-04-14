@@ -37,6 +37,7 @@ public class PuzzleManager : MonoBehaviour
     public void LoadPatient(PatientData patient)
     {
         IsComplete = false;
+        selectedPiece = null; // 이전 환자의 파괴된 조각 참조 제거
 
         // 알츠하이머 전용: 프레임 제한 설정
         grid.maxPieces = patient.maxPiecesInFrame;

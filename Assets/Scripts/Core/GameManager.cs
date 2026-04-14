@@ -56,6 +56,7 @@ public class GameManager : MonoBehaviour
 
         // 게임 인트로
         yield return ChangeState(GameState.VN);
+        yield return FadeIn(); // FadeOut 후 VN 화면 페이드인
         if (epilogueDatabase != null && epilogueDatabase.introLines.Length > 0)
             yield return vnManager.PlayLines(epilogueDatabase.introLines);
 
@@ -64,17 +65,17 @@ public class GameManager : MonoBehaviour
             var patient = patients[patientIndex];
             endingTracker.BeginPatient(patient.patientType);
 
-            // VN - 치료 전 대화
+            // VN - 치료 전 대화 (게임 인트로에서 이어지므로 별도 FadeIn 불필요)
             yield return ChangeState(GameState.VN);
             yield return vnManager.PlayLines(patient.introLines);
 
-            // 전환 연출
+            // 전환 연출: 검은 화면 상태에서 퍼즐 로드 후 페이드인
             yield return FadeOut();
             yield return ChangeState(GameState.Puzzle);
+            puzzleManager.LoadPatient(patient); // FadeIn 전에 로드해야 빈 화면 노출 방지
             yield return FadeIn();
 
             // 퍼즐
-            puzzleManager.LoadPatient(patient);
             yield return new WaitUntil(() => puzzleManager.IsComplete);
 
             // 전환 연출
